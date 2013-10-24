@@ -1,0 +1,153 @@
+<html>
+	<head>
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			var socket = io.connect('http://ec2-54-200-33-16.us-west-2.compute.amazonaws.com:8080/');
+			
+			var myId = null;
+			checkId = new Array();
+			var nick = null;
+			
+			
+			var pacglen = 0;
+			
+			var messageclick = false;
+			
+			socket.on('connect', function() {
+				console.log("Connected");
+			});
+
+						 
+			socket.on('set_id', function(data){
+				myId = data;
+				console.log("myid is " + myId);
+				nick = prompt("Enter your name");
+				if(myId ==0){
+			        checkId[myId] = true;
+				}
+			        else
+			        checkId[myId] = false;
+	        
+				socket.emit('addnick', nick);
+				
+			});
+			
+			socket.on('addnewuser', function(nick){	
+				document.getElementById('userlist').innerHTML += ("<div id=\"id_" + nick + "\">" + "User joined: " + nick + "</div>");
+				console.log("Added new user to userlist: " + nick);
+			});
+
+			
+			socket.on('fulluserlist', function(allnicks){
+				//var html = '';
+				document.getElementById('userlist').innerHTML = '';
+				
+				for (var i=0; i < allnicks.length; i++){
+					document.getElementById('userlist').innerHTML += ("<div id=\"id_" + allnicks[i] + "\">" + "User joined: " + allnicks[i] + "</div>")	
+					if (pacglen == 0){
+						document.getElementById("id_" + allnicks[0]).style.color = "green";
+					} else {
+						document.getElementById("id_" + allnicks[i]).style.color = "black";
+					}
+
+				}
+				
+				//allnicks.html(html);
+				console.log("Showed everyone joined");
+				
+			});
+			
+			
+			
+			socket.on('fullmessage', function(messagedata) {
+				console.log("messagedata is: "+messagedata.themessage+"; pacglen is: "+ messagedata.thelength, "; nicknames are: "+ messagedata.thenicknames);
+				document.getElementById('messages').innerHTML = '';	
+				pacglen = messagedata.thelength;
+				
+				if(pacglen == myId){
+					console.log("pacglen==myId: " + pacglen);
+					checkId[myId] = true;
+ 					
+ 					for(var m = 0; m < pacglen; m++){
+						console.log("who's turn? "+(messagedata.thenicknames)[m+1]);
+						var col = document.getElementById("id_" + (messagedata.thenicknames)[m+1]);
+						col.style.color = "green";
+						document.getElementById("id_" + (messagedata.thenicknames)[m]).style.color = "black";
+
+					} 
+						
+				} else {
+					for(var m = 0; m < pacglen; m++){
+						console.log("not your turn, "+(messagedata.thenicknames)[m]);
+						document.getElementById("id_" + (messagedata.thenicknames)[m]).style.color = "black";
+					}
+				}
+			
+	
+				if(checkId[myId]&&((pacglen == myId)||(pacglen-1 == myId))) {
+					document.getElementById('messages').innerHTML += messagedata.themessage += "<br/>";
+			    }
+			    
+			   
+			});
+
+		
+		var sendmessage = function() {	
+				var messagetext = document.getElementById('message').value;
+				console.log("Sending: " + message);
+				
+				// Send a messaage
+				if(checkId[myId]){
+				//console.log("Am I sending message?"+ checkId[myId]);
+				socket.emit('message',messagetext);
+				
+			    document.getElementById("message").style.display = 'none';
+				document.getElementById("button").style.display = 'none';
+				}
+				
+			};
+			
+			
+		window.onload = function(){
+			console.log("windowonload");
+			var showall = document.getElementById('rectangle');
+			//detect if the rectangle button is clicked or not 
+			showall.addEventListener('click',function(e) {
+				socket.emit('seeall', "");
+			}, false);
+		   };
+		   
+		socket.on('seeall', function(data){
+			console.log("Show whole story");
+			document.getElementById('wholestory').innerHTML += "<p>";
+			for(var m =0; m< data.length; m++){
+				console.log("add storyline: " + data[m]);
+				document.getElementById('wholestory').innerHTML += data[m] += "<br/>";
+			}
+		});
+		
+
+		</script>
+	</head>
+	<body>
+ 		<div id="messages">
+			No Messages Yet
+		</div>
+		<div>
+			<input type="text" id="message" name="message">
+			<input type="button" id ="button" value="Send Message" onclick="sendmessage();">
+			<!--<input type="button" value="other" onclick="sendother();">-->
+		</div>
+		
+		<input type ="button" id="rectangle" value="See Whole Story">
+		<div id="wholestory">
+			<b>Full Story Here:</b>
+		</div>
+
+		<div id="userlist">
+			No Users Yet</div>
+        <p id="status">user is typing</p>
+		
+	</body>
+</html>
+		
