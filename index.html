@@ -2,16 +2,13 @@
 	<head>
 		<script src="/socket.io/socket.io.js"></script>
 		<script>
-			var socket = io.connect('http://ec2-54-200-33-16.us-west-2.compute.amazonaws.com:8080/');
+			var socket = io.connect('http://ec2-54-200-33-16.us-west-2.compute.amazonaws.com:7171/', {'sync disconnect on unload': true });
 			
 			var myId = null;
-			checkId = new Array();
+			var checkId = new Array();
 			var nick = null;
-			
-			
 			var pacglen = 0;
-			
-			var messageclick = false;
+			var clients = new Array();
 			
 			socket.on('connect', function() {
 				console.log("Connected");
@@ -37,7 +34,7 @@
 				console.log("Added new user to userlist: " + nick);
 			});
 
-			
+
 			socket.on('fulluserlist', function(allnicks){
 				//var html = '';
 				document.getElementById('userlist').innerHTML = '';
@@ -120,12 +117,28 @@
 		socket.on('seeall', function(data){
 			console.log("Show whole story");
 			document.getElementById('wholestory').innerHTML += "<p>";
-			for(var m =0; m< data.length; m++){
+			for(var m = 0; m< data.length; m++){
 				console.log("add storyline: " + data[m]);
 				document.getElementById('wholestory').innerHTML += data[m] += "<br/>";
 			}
 		});
 		
+		// socket.on('disconnect', function(data){
+		// 	console.log("disconnected: " + data.socketid);
+		// 	console.log("new user list: " + data.userlist); //show everyone who is connected
+			
+		// 	// var remove = data.socketid; //remove the person who disconnected
+			
+		// 	// for(var i = 0; i < data.userlist.length; i++) {
+		// 	// 	if (data.userlist[i] === remove){
+		// 	// 	data.userlist.splice(i,1);
+		// 	// 	break;
+		// 	// 	}
+		// 	// }
+		// 	// //remove name from html display??
+		// 	// document.getElementById("'id_'+ data.userList[i]").innerHTML = '';
+
+		// });
 
 		</script>
 	</head>
@@ -146,7 +159,7 @@
 
 		<div id="userlist">
 			No Users Yet</div>
-        <p id="status">user is typing</p>
+        <p id="status"></p>
 		
 	</body>
 </html>

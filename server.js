@@ -2,7 +2,7 @@
 var http = require('http');
 var fs = require('fs'); // Using the filesystem module
 var httpServer = http.createServer(requestHandler);
-httpServer.listen(8080);
+httpServer.listen(7171);
 
 function requestHandler(req, res) {
 	// Read index.html
@@ -80,9 +80,21 @@ io.sockets.on('connection',
 
 		
 		socket.on('disconnect', function() {
+			
+			console.log(socket.nick + " has disconnected");
 
-			var spliced = clients.splice(clients.indexOf(socket.id),1);			
-			console.log("disconnected/removed: " + spliced);
+
+			for (var i = 0; i < allnicks.length; i++){
+				if (socket.nick == allnicks[i]){
+					allnicks.splice(i,1);
+				}
+			} 
+			
+			io.sockets.emit('fulluserlist', allnicks);
+			//socket.broadcast.emit('fulluserlist', 'SERVER', socket.nick + ' has disconnected');
+
+			console.log(allnicks);
+			
 		});
-	}
-);
+
+	});
